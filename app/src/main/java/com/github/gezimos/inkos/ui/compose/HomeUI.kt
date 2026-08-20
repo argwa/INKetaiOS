@@ -132,6 +132,7 @@ import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.gezimos.inkos.R
+import com.github.gezimos.inkos.data.AppListItem
 import com.github.gezimos.inkos.data.Constants
 import com.github.gezimos.inkos.data.HomeAppUiState
 import com.github.gezimos.inkos.data.Prefs
@@ -467,6 +468,16 @@ fun HomeUI(
                             showTextIslands = state.textIslands
                         )
                     }
+                }
+                Constants.BottomWidgetType.FKeyMap.value -> {
+                    Spacer(modifier = Modifier.height(12.dp.scaled(screenScale)))
+                    FKeyMapBlock(
+                        state = state,
+                        onClick = callbacks.onBottomWidgetClick,
+                        isEditMode = showEditMode,
+                        isFocused = showDpadMode && focusZone == FocusZone.QUOTE,
+                        showTextIslands = state.textIslands
+                    )
                 }
                 Constants.BottomWidgetType.Disabled.value -> {
                     if (showEditMode) {
@@ -2410,6 +2421,106 @@ private fun TotalUsageBlock(
         )
     }
 }
+/** Returns a short, human-readable label for what a gesture/F-key currently triggers. */
+private fun fKeyActionLabel(context: android.content.Context, action: Constants.Action, app: AppListItem): String {
+    return when (action) {
+        Constants.Action.Disabled -> context.getString(R.string.disabled)
+        Constants.Action.OpenApp -> if (app.activityPackage.isNotEmpty()) app.label else context.getString(R.string.disabled)
+        else -> action.getString(context)
+    }
+}
+
+@Composable
+private fun FKeyMapBlock(
+    state: HomeUiRenderState,
+    onClick: () -> Unit,
+    isEditMode: Boolean = false,
+    isFocused: Boolean = false,
+    showTextIslands: Boolean = false
+) {
+    val context = LocalContext.current
+    val prefs = remember { Prefs(context) }
+
+    val f1Label = fKeyActionLabel(context, prefs.swipeUpAction, prefs.appSwipeUp)
+    val f2Label = fKeyActionLabel(context, prefs.swipeDownAction, prefs.appSwipeDown)
+    val f3Label = fKeyActionLabel(context, prefs.swipeLeftAction, prefs.appSwipeLeft)
+    val f4Label = fKeyActionLabel(context, prefs.swipeRightAction, prefs.appSwipeRight)
+
+    val highlightColor = Theme.colors.text
+    val islandBackgroundColor = if (state.textIslandsInverted) Theme.colors.background else Theme.colors.text
+    val islandTextColor = if (state.textIslandsInverted) Theme.colors.text else Theme.colors.background
+    val focusBackgroundColor = if (showTextIslands) (if (state.textIslandsInverted) Theme.colors.text else Theme.colors.background) else highlightColor
+    val focusTextColor = if (showTextIslands) (if (state.textIslandsInverted) Theme.colors.background else Theme.colors.text) else Theme.colors.background
+    val textColor = when {
+        isFocused && showTextIslands -> focusTextColor
+        isFocused -> Theme.colors.background
+        showTextIslands -> islandTextColor
+        else -> Color(state.textColor)
+    }
+
+    val quoteTypeface = remember(state.quoteFont, state.quoteCustomFontPath) {
+        state.quoteFont.getFont(context, state.quoteCustomFontPath)
+    }
+    val quoteFontFamily = quoteTypeface?.let { FontFamily(it) } ?: FontFamily.Default
+    val scaledFKeySize = (state.quoteSize * 0.85f) * rememberScreenScale()
+
+    val bgShape = remember(state.textIslandsShape) {
+        ShapeHelper.getRoundedCornerShape(
+            textIslandsShape = state.textIslandsShape,
+            pillRadius = 50.dp
+        )
+    }
+    val islandBgModifier = if (isFocused || showTextIslands) {
+        val bgColor = when {
+            isFocused && showTextIslands -> focusBackgroundColor
+            isFocused -> highlightColor
+            else -> islandBackgroundColor
+        }
+        Modifier.background(bgColor, bgShape).padding(horizontal = 8.dp, vertical = 2.dp)
+    } else {
+        Modifier
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(islandBgModifier)
+            .then(if (isEditMode) Modifier.clickableNoRipple(onClick) else Modifier),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Left column: F1 (up) on top, F3 (left) below.
+        Column(horizontalAlignment = Alignment.Start) {
+            Text(
+                text = f1Label,
+                style = TextStyle(color = textColor, fontSize = scaledFKeySize.sp, fontFamily = quoteFontFamily, textAlign = TextAlign.Start),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = f3Label,
+                style = TextStyle(color = textColor, fontSize = scaledFKeySize.sp, fontFamily = quoteFontFamily, textAlign = TextAlign.Start),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        // Right column: F2 (down) on top, F4 (right) below.
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = f2Label,
+                style = TextStyle(color = textColor, fontSize = scaledFKeySize.sp, fontFamily = quoteFontFamily, textAlign = TextAlign.End),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = f4Label,
+                style = TextStyle(color = textColor, fontSize = scaledFKeySize.sp, fontFamily = quoteFontFamily, textAlign = TextAlign.End),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
 @Composable
 private fun EventsBlock(
     state: HomeUiRenderState,

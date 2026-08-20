@@ -177,16 +177,19 @@ object NavHelper {
                                 if (selectedIndex.value < appsOnPageSize - 1) {
                                     selectedIndex.value = selectedIndex.value + 1
                                 } else if (currentPage < totalPages - 1) {
+                                    // Move to the next page (still within the home screen —
+                                    // not a menu transition).
                                     adjustPageBy(1)
                                     selectedIndex.value = 0
                                 } else {
+                                    // Screen/menu transitions via dpad are disabled — only
+                                    // F1-F4 can do that. Move focus within the page if
+                                    // possible, otherwise just absorb the key.
                                     if (showMediaWidget) {
                                         focusZone.value = FocusZone.MEDIA_WIDGET
                                         selectedMediaButton?.value = 0
                                     } else if (showQuote) {
                                         focusZone.value = FocusZone.QUOTE
-                                    } else {
-                                        onSwipeDown?.invoke()
                                     }
                                 }
                             }
@@ -199,20 +202,18 @@ object NavHelper {
                                 } else if (showQuote) {
                                     // Move to quote from last button
                                     focusZone.value = FocusZone.QUOTE
-                                } else {
-                                    onSwipeDown?.invoke()
                                 }
+                                // else: at the boundary — absorb the key, no menu transition.
                             } else if (showQuote) {
                                 focusZone.value = FocusZone.QUOTE
                             }
                         }
                         FocusZone.QUOTE -> {
-                            // At bottom boundary - trigger swipe down action
-                            onSwipeDown?.invoke()
+                            // At bottom boundary — absorb the key, no menu transition via dpad.
                         }
                     }
                 } else {
-                    // Legacy behavior when focusZone is null
+                    // Legacy behavior when focusZone is null.
                     if (appsOnPageSize > 0) {
                         if (selectedIndex.value < appsOnPageSize - 1) {
                             selectedIndex.value = selectedIndex.value + 1
@@ -229,27 +230,28 @@ object NavHelper {
                 if (focusZone != null) {
                     when (focusZone.value) {
                         FocusZone.CLOCK -> {
-                            // At top boundary - trigger swipe up action
-                            onSwipeUp?.invoke()
+                            // At top boundary — absorb the key, no menu transition via dpad.
                         }
                         FocusZone.DATE -> {
                             if (showClock) focusZone.value = FocusZone.CLOCK
-                            else onSwipeUp?.invoke()
+                            // else: at the boundary — absorb the key, no menu transition.
                         }
                         FocusZone.APPS -> {
                             if (appsOnPageSize > 0) {
                                 if (selectedIndex.value > 0) {
                                     selectedIndex.value = selectedIndex.value - 1
                                 } else if (currentPage > 0) {
+                                    // Move to the previous page (still within the home
+                                    // screen — not a menu transition).
                                     adjustPageBy(-1)
                                     selectedIndex.value = appsPerPage - 1
                                 } else {
+                                    // Screen/menu transitions via dpad are disabled — only
+                                    // F1-F4 can do that.
                                     if (showDate) {
                                         focusZone.value = FocusZone.DATE
                                     } else if (showClock) {
                                         focusZone.value = FocusZone.CLOCK
-                                    } else {
-                                        onSwipeUp?.invoke()
                                     }
                                 }
                             }
@@ -274,7 +276,7 @@ object NavHelper {
                         }
                     }
                 } else {
-                    // Legacy behavior when focusZone is null
+                    // Legacy behavior when focusZone is null.
                     if (appsOnPageSize > 0) {
                         if (selectedIndex.value > 0) {
                             selectedIndex.value = selectedIndex.value - 1
@@ -287,17 +289,13 @@ object NavHelper {
                 true
             }
             Key.DirectionLeft -> {
+                // Menu/screen transitions via dpad are disabled — only F1-F4 can do that.
                 dpadMode.value = true
-                if (!disableSwipeGestures) {
-                    try { onSwipeLeft?.invoke() } catch (_: Exception) {}
-                }
                 true
             }
             Key.DirectionRight -> {
+                // Menu/screen transitions via dpad are disabled — only F1-F4 can do that.
                 dpadMode.value = true
-                if (!disableSwipeGestures) {
-                    try { onSwipeRight?.invoke() } catch (_: Exception) {}
-                }
                 true
             }
             Key.PageUp -> {

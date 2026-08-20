@@ -170,6 +170,7 @@
     <string name="bottom_widget_shortcuts">Shortcuts</string>
     <string name="bottom_widget_total_usage">Total Usage</string>
     <string name="bottom_widget_page_dots">Page Dots</string>
+    <string name="bottom_widget_fkeys">F Key Map</string>
     <string name="show_quote">Show Quote</string>
     <string name="show_audio_widget">Show Audio Widget</string>
     <string name="show_android_widget">Show Android Widget</string>
@@ -321,10 +322,10 @@
     <string name="quote_click_app">Click on Quote</string>
     <string name="edit_gestures_settings_toast">Edit actions &amp; Gestures in Settings/Gestures</string>
     <string name="swipe_movement">Swipe Movement</string>
-    <string name="swipe_left_app">Swipe left</string>
-    <string name="swipe_right_app">Swipe right</string>
-    <string name="swipe_up_app">Swipe up</string>
-    <string name="swipe_down_app">Swipe down</string>
+    <string name="swipe_left_app">F3</string>
+    <string name="swipe_right_app">F4</string>
+    <string name="swipe_up_app">F1</string>
+    <string name="swipe_down_app">F2</string>
     <string name="swipe_threshold_ratios">Swipe threshold ratios</string>
     <string name="short_swipe_ratio">Short swipe ratio</string>
     <string name="long_swipe_ratio">Long swipe ratio</string>

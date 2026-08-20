@@ -1071,13 +1071,13 @@ class SettingsFragment : Fragment() {
                 stringResource(R.string.bottom_widget_disabled), stringResource(R.string.bottom_widget_quote),
                 stringResource(R.string.bottom_widget_events), stringResource(R.string.bottom_widget_android),
                 stringResource(R.string.bottom_widget_shortcuts), stringResource(R.string.bottom_widget_total_usage),
-                stringResource(R.string.bottom_widget_page_dots)
+                stringResource(R.string.bottom_widget_page_dots), stringResource(R.string.bottom_widget_fkeys)
             )
             val bottomWidgetValues = listOf(
                 Constants.BottomWidgetType.Disabled.value, Constants.BottomWidgetType.Quote.value,
                 Constants.BottomWidgetType.Events.value, Constants.BottomWidgetType.AndroidWidget.value,
                 Constants.BottomWidgetType.Shortcuts.value, Constants.BottomWidgetType.TotalUsage.value,
-                Constants.BottomWidgetType.PageDots.value
+                Constants.BottomWidgetType.PageDots.value, Constants.BottomWidgetType.FKeyMap.value
             )
             val currentBottomWidgetIndex = bottomWidgetValues.indexOf(homeUiState.bottomWidgetType).coerceAtLeast(0)
             SettingsSelect(
@@ -1210,7 +1210,10 @@ class SettingsFragment : Fragment() {
                     }
                 )
             }
-            if (homeUiState.bottomWidgetType != Constants.BottomWidgetType.Disabled.value && homeUiState.bottomWidgetType != Constants.BottomWidgetType.AndroidWidget.value) {
+            if (homeUiState.bottomWidgetType != Constants.BottomWidgetType.Disabled.value &&
+                homeUiState.bottomWidgetType != Constants.BottomWidgetType.AndroidWidget.value &&
+                homeUiState.bottomWidgetType != Constants.BottomWidgetType.FKeyMap.value
+            ) {
                 SettingsSelect(title = stringResource(R.string.home_quote_alignment),
                     option = alignmentLabels.getOrElse(homeUiState.quoteAlignment) { stringResource(R.string.left) },
                     optionAlignment = homeUiState.quoteAlignment,
@@ -1982,7 +1985,7 @@ class SettingsFragment : Fragment() {
             )
             SettingsTitle(text = stringResource(R.string.swipe_movement), fontSize = titleFontSize)
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_left_app)}",
+                title = stringResource(R.string.swipe_left_app),
                 option = when (uiState.swipeLeftAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeLeftAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); else -> uiState.swipeLeftAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_left),
@@ -1994,7 +1997,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_right_app)} (<)",
+                title = stringResource(R.string.swipe_right_app),
                 option = when (uiState.swipeRightAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeRightAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeRightAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_right),
@@ -2013,7 +2016,7 @@ class SettingsFragment : Fragment() {
                 onClick = { dialogBuilder.showGestureVsPageConflictSheet() }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_up_app)} (^)",
+                title = stringResource(R.string.swipe_up_app),
                 option = when (uiState.swipeUpAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeUpAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeUpAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_up),
@@ -2025,7 +2028,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_down_app)} (v)",
+                title = stringResource(R.string.swipe_down_app),
                 option = when (uiState.swipeDownAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeDownAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeDownAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_down),

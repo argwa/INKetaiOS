@@ -107,9 +107,13 @@ fun Context.launchCalendarEvent(eventId: Long) {
     } catch (_: Exception) {}
 }
 
-fun Context.openDialerApp() {
+fun Context.openDialerApp(digits: String? = null) {
     try {
         val sendIntent = Intent(Intent.ACTION_DIAL)
+        if (!digits.isNullOrEmpty()) {
+            sendIntent.data = Uri.parse("tel:" + Uri.encode(digits))
+        }
+        sendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         this.startActivity(sendIntent)
     } catch (e: java.lang.Exception) {
         d("openDialerApp", e.toString())

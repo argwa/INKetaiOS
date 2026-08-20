@@ -352,19 +352,21 @@ fun showStatusBar(activity: Activity) {
 
         val windowInsetsController =
             WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        val prefs = Prefs(activity)
-        val isDarkTheme = when (prefs.appTheme) {
-            Constants.Theme.Dark -> true
-            Constants.Theme.Light -> false
-            Constants.Theme.System -> isSystemInDarkMode(activity)
-        }
-        windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
+        // Status bar background is always black, so its icons are always drawn light.
+        windowInsetsController.isAppearanceLightStatusBars = false
+        try {
+            activity.window.statusBarColor = android.graphics.Color.BLACK
+        } catch (_: Exception) {}
     } else {
         @Suppress("DEPRECATION", "InlinedApi")
         activity.window.decorView.apply {
             systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
+        try {
+            @Suppress("DEPRECATION")
+            activity.window.statusBarColor = android.graphics.Color.BLACK
+        } catch (_: Exception) {}
     }
 }
 

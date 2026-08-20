@@ -475,7 +475,8 @@ class MainActivity : AppCompatActivity() {
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         val isDarkTheme = prefs.getResolvedTheme() == Constants.Theme.Dark
         windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
-        windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
+        // Status bar is always black, so its icons are always drawn light (non-dark appearance).
+        windowInsetsController.isAppearanceLightStatusBars = false
 
         // --- System bar colors ---
         try {
@@ -485,7 +486,8 @@ class MainActivity : AppCompatActivity() {
             try {
                 @Suppress("DEPRECATION")
                 try {
-                    window.statusBarColor = opaqueBg
+                    // Status bar background is always black, regardless of theme.
+                    window.statusBarColor = android.graphics.Color.BLACK
                     window.navigationBarColor = opaqueBg
                 } catch (_: Exception) {}
 
@@ -653,12 +655,14 @@ class MainActivity : AppCompatActivity() {
             val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
             val isDarkTheme = resolvedTheme == Constants.Theme.Dark
             windowInsetsController.isAppearanceLightNavigationBars = !isDarkTheme
-            windowInsetsController.isAppearanceLightStatusBars = !isDarkTheme
+            // Status bar is always black, so its icons are always drawn light (non-dark appearance).
+            windowInsetsController.isAppearanceLightStatusBars = false
             
             try {
                 val rawBg = try { com.github.gezimos.inkos.style.resolveThemeColors(this).second } catch (_: Exception) { prefs.backgroundColor }
                 val opaqueBg = if ((rawBg ushr 24) == 0) rawBg or (0xFF shl 24) else rawBg
-                window.statusBarColor = opaqueBg
+                // Status bar background is always black, regardless of theme.
+                window.statusBarColor = android.graphics.Color.BLACK
                 window.navigationBarColor = opaqueBg
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     @Suppress("DEPRECATION")

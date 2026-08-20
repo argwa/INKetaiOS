@@ -211,7 +211,8 @@ object Constants {
         AndroidWidget("android_widget"),
         Shortcuts("search"), // value kept as "search" for backward compat
         TotalUsage("total_usage"),
-        PageDots("page_dots")
+        PageDots("page_dots"),
+        FKeyMap("fkey_map")
     }
 
     enum class NotificationIndicator(val symbol: String, val label: String, val isSuperscript: Boolean) {

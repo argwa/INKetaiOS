@@ -611,7 +611,8 @@ object EditModeHelper {
             context.getString(R.string.bottom_widget_android),
             context.getString(R.string.bottom_widget_shortcuts),
             context.getString(R.string.bottom_widget_total_usage),
-            context.getString(R.string.bottom_widget_page_dots)
+            context.getString(R.string.bottom_widget_page_dots),
+            context.getString(R.string.bottom_widget_fkeys)
         )
         val bottomWidgetValues = listOf(
             Constants.BottomWidgetType.Disabled.value,
@@ -620,7 +621,8 @@ object EditModeHelper {
             Constants.BottomWidgetType.AndroidWidget.value,
             Constants.BottomWidgetType.Shortcuts.value,
             Constants.BottomWidgetType.TotalUsage.value,
-            Constants.BottomWidgetType.PageDots.value
+            Constants.BottomWidgetType.PageDots.value,
+            Constants.BottomWidgetType.FKeyMap.value
         )
         showDialog(context, prefs) {
             val selectedTabIndex = remember { mutableStateOf(0) }

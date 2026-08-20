@@ -2,6 +2,7 @@ package com.github.gezimos.inkos.ui
 
 import android.app.Notification
 import com.github.gezimos.common.openCameraApp
+import com.github.gezimos.common.openDialerApp
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.content.IntentFilter
@@ -78,6 +79,8 @@ import com.github.gezimos.inkos.ui.compose.NavHelper
 import com.github.gezimos.inkos.ui.compose.gestureHelper
 import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -97,6 +100,10 @@ class HomeFragmentCompose : Fragment() {
         fun sendGoToFirstPageSignal() {
             goToFirstPageSignal = true
         }
+
+        // Max gap (ms) between STAR (*) and POUND (#) key-downs to count as pressed
+        // "at the same time" and open the quick menu instead of the dialer.
+        private const val STAR_POUND_COMBO_WINDOW_MS = 300L
     }
 
     private lateinit var prefs: Prefs
@@ -117,6 +124,14 @@ class HomeFragmentCompose : Fragment() {
         ComposeDialogManager(requireContext(), requireActivity())
     }
     private var vibrator: Vibrator? = null
+
+    // Tracks recent physical STAR (*) / POUND (#) key presses so that pressing both
+    // together opens the quick menu (same menu as pinching the home screen) instead of
+    // each key individually launching the dialer.
+    private var lastStarKeyDownTime: Long = 0L
+    private var lastPoundKeyDownTime: Long = 0L
+    private var pendingStarDialerJob: Job? = null
+    private var pendingPoundDialerJob: Job? = null
 
     // Widget picker launcher
     var pendingWidgetId: Int = -1
@@ -386,7 +401,11 @@ class HomeFragmentCompose : Fragment() {
                                     showClock = fullRenderState.showClock || isEditMode,
                                     showDate = fullRenderState.showDate || isEditMode,
                                     showMediaWidget = (fullRenderState.showMediaWidget && fullRenderState.mediaInfo != null) || (isEditMode && fullRenderState.showMediaWidget),
-                                    showQuote = fullRenderState.bottomWidgetType != Constants.BottomWidgetType.Disabled.value || isEditMode,
+                                    // The F Key Map widget is never dpad-focusable — it's
+                                    // display-only, so hitting the bottom of the page just
+                                    // stops there instead of moving focus onto it.
+                                    showQuote = fullRenderState.bottomWidgetType != Constants.BottomWidgetType.FKeyMap.value &&
+                                        (fullRenderState.bottomWidgetType != Constants.BottomWidgetType.Disabled.value || isEditMode),
                                     onClockClick = { handleClockClick() },
                                     onDateClick = { handleDateClick() },
                                     onMediaAction = { buttonIndex ->
@@ -422,27 +441,14 @@ class HomeFragmentCompose : Fragment() {
                                 try { dpadMode.value = false } catch (_: Exception) {}
                                 try { handleDoubleTapAction() } catch (_: Exception) {}
                             },
-                            onSwipeLeft = {
-                                GestureHelper.handleSwipeLeft(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
-                            },
-                            onSwipeRight = {
-                                GestureHelper.handleSwipeRight(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
-                            },
-                            onSwipeUp = if (prefs.swipeUpAction != Action.Disabled) {
-                                {
-                                    try { GestureHelper.handleSwipeUp(requireContext(), this@HomeFragmentCompose, viewModel, prefs) } catch (_: Exception) {}
-                                }
-                            } else null,
-                            onSwipeDown = if (prefs.swipeDownAction != Action.Disabled) {
-                                {
-                                    try { GestureHelper.handleSwipeDown(requireContext(), this@HomeFragmentCompose, viewModel, prefs) } catch (_: Exception) {}
-                                }
-                            } else null,
-                            onVerticalPageMove = { delta ->
-                                try {
-                                    if (fullRenderState.totalPages > 1) adjustPageBy(delta, fullRenderState.totalPages)
-                                } catch (_: Exception) {}
-                            },
+                            // Touch swipe gestures (up/down/left/right) and drag-based
+                            // page changing are disabled: F1 (up), F2 (down), F3 (left)
+                            // and F4 (right) are now the exclusive way to trigger these.
+                            onSwipeLeft = null,
+                            onSwipeRight = null,
+                            onSwipeUp = null,
+                            onSwipeDown = null,
+                            onVerticalPageMove = null,
                             onAnyTouch = { try {
                                 dpadMode.value = false
                                 focusZone.value = com.github.gezimos.inkos.ui.compose.FocusZone.APPS
@@ -599,25 +605,61 @@ class HomeFragmentCompose : Fragment() {
         act.fragmentKeyHandler = object : com.github.gezimos.inkos.MainActivity.FragmentKeyHandler {
             override fun handleKeyEvent(keyCode: Int, event: KeyEvent): Boolean {
                 try {
+                    if (event.action != KeyEvent.ACTION_DOWN) return false
+
+                    // Physical dialpad keys (0-9, *, #) always launch the phone app
+                    // with the pressed digit entered on the dialer. The call/send key
+                    // is intentionally NOT handled here — it does not open the dialer.
+                    // Exception: pressing * and # at (roughly) the same time opens the
+                    // quick menu (same menu as pinching the home screen) instead.
+                    if (keyCode == KeyEvent.KEYCODE_STAR) {
+                        val now = android.os.SystemClock.elapsedRealtime()
+                        if (now - lastPoundKeyDownTime <= STAR_POUND_COMBO_WINDOW_MS && pendingPoundDialerJob != null) {
+                            pendingPoundDialerJob?.cancel()
+                            pendingPoundDialerJob = null
+                            try { VibrationHelper.trigger(VibrationHelper.Effect.CLICK) } catch (_: Exception) {}
+                            showQuickMenuWithAuth()
+                        } else {
+                            lastStarKeyDownTime = now
+                            pendingStarDialerJob?.cancel()
+                            pendingStarDialerJob = lifecycleScope.launch {
+                                delay(STAR_POUND_COMBO_WINDOW_MS)
+                                try { VibrationHelper.trigger(VibrationHelper.Effect.CLICK) } catch (_: Exception) {}
+                                requireContext().openDialerApp("*")
+                                pendingStarDialerJob = null
+                            }
+                        }
+                        return true
+                    }
+                    if (keyCode == KeyEvent.KEYCODE_POUND) {
+                        val now = android.os.SystemClock.elapsedRealtime()
+                        if (now - lastStarKeyDownTime <= STAR_POUND_COMBO_WINDOW_MS && pendingStarDialerJob != null) {
+                            pendingStarDialerJob?.cancel()
+                            pendingStarDialerJob = null
+                            try { VibrationHelper.trigger(VibrationHelper.Effect.CLICK) } catch (_: Exception) {}
+                            showQuickMenuWithAuth()
+                        } else {
+                            lastPoundKeyDownTime = now
+                            pendingPoundDialerJob?.cancel()
+                            pendingPoundDialerJob = lifecycleScope.launch {
+                                delay(STAR_POUND_COMBO_WINDOW_MS)
+                                try { VibrationHelper.trigger(VibrationHelper.Effect.CLICK) } catch (_: Exception) {}
+                                requireContext().openDialerApp("#")
+                                pendingPoundDialerJob = null
+                            }
+                        }
+                        return true
+                    }
+                    val dialerDigit = KeyMapperHelper.digitForDialerKeyCode(keyCode)
+                    if (dialerDigit != null) {
+                        try { VibrationHelper.trigger(VibrationHelper.Effect.CLICK) } catch (_: Exception) {}
+                        requireContext().openDialerApp(dialerDigit)
+                        return true
+                    }
+
                     val mapped = KeyMapperHelper.mapHomeKey(prefs, keyCode, event)
                     when (mapped) {
                         KeyMapperHelper.HomeKeyAction.None -> return false
-                        KeyMapperHelper.HomeKeyAction.ClickClock -> {
-                            handleClockClick()
-                            return true
-                        }
-                        KeyMapperHelper.HomeKeyAction.ClickDate -> {
-                            handleDateClick()
-                            return true
-                        }
-                        KeyMapperHelper.HomeKeyAction.ClickQuote -> {
-                            handleBottomWidgetClick()
-                            return true
-                        }
-                        KeyMapperHelper.HomeKeyAction.DoubleTap -> {
-                            handleDoubleTapAction()
-                            return true
-                        }
                         KeyMapperHelper.HomeKeyAction.PageUp -> {
                             adjustPageBy(-1, viewModel.homeUiState.value.homePagesNum)
                             return true
@@ -626,16 +668,20 @@ class HomeFragmentCompose : Fragment() {
                             adjustPageBy(1, viewModel.homeUiState.value.homePagesNum)
                             return true
                         }
-                        KeyMapperHelper.HomeKeyAction.OpenQuickMenu -> {
-                            showQuickMenuWithAuth()
-                            return true
-                        }
                         KeyMapperHelper.HomeKeyAction.SwipeLeft -> {
                             GestureHelper.handleSwipeLeft(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
                             return true
                         }
                         KeyMapperHelper.HomeKeyAction.SwipeRight -> {
                             GestureHelper.handleSwipeRight(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
+                            return true
+                        }
+                        KeyMapperHelper.HomeKeyAction.SwipeUp -> {
+                            GestureHelper.handleSwipeUp(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
+                            return true
+                        }
+                        KeyMapperHelper.HomeKeyAction.SwipeDown -> {
+                            GestureHelper.handleSwipeDown(requireContext(), this@HomeFragmentCompose, viewModel, prefs)
                             return true
                         }
                         KeyMapperHelper.HomeKeyAction.LongPressSelected -> {
@@ -655,6 +701,10 @@ class HomeFragmentCompose : Fragment() {
     override fun onPause() {
         super.onPause()
         isHomeVisible = false
+        pendingStarDialerJob?.cancel()
+        pendingStarDialerJob = null
+        pendingPoundDialerJob?.cancel()
+        pendingPoundDialerJob = null
         val act = activity as? com.github.gezimos.inkos.MainActivity ?: return
         if (act.fragmentKeyHandler != null) act.fragmentKeyHandler = null
     }
