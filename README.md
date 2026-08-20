@@ -36,6 +36,7 @@ It works well (tested) on:
 - Added widget displaying the mapped apps to the F keys
 - pressing * and # at the same time opens the launcher settings
 - Disabled moving through menus via dpad (now it only work via F keys)
+- Pressing the number keys will redirect you to the Dialer
 
 **Everthing else works the same as the original InkOS**
 
