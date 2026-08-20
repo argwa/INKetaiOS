@@ -18,7 +18,7 @@
 
 </div>
 
-#This project was unfortunately made with AI as I am not a programmer,  please support the original developer [Gezimos](https://github.com/gezimos)!!
+# This project was unfortunately made with AI as I am not a programmer,  please support the original developer [Gezimos](https://github.com/gezimos)!!
 
 # Tested on Android 8.
 
