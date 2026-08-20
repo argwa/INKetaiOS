@@ -1,24 +1,10 @@
 <div style="text-align: center;">
 	<img src="docs/img/inkos.svg" alt="inkOS logo" height="48">
 	<h2>inketaiOS - Fork of InkOS Text based launcher adapted for keitai phones </h2>
-    <table>
-        <tr>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/0.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/1.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/2.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/3.png' height='300' alt=""></td>
-        </tr>
-        <tr>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/4.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/5.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/6.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/7.png' height='300' alt=""></td>
-        </tr>
-    </table>
-
 </div>
 
-# This project was unfortunately made with AI as I am not a programmer,  please support the original developer [Gezimos](https://github.com/gezimos)!!
+# This project was unfortunately made with AI as I am not a programmer.  
+# Please support the original developer [Gezimos](https://github.com/gezimos)!!
 
 # Tested on Android 8.
 
